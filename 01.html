@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function answer( input ) {
+	var answer = false;
+
+	return answer;
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+var output;
+window.addEventListener('load',function(){
+	output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		output.innerHTML = "";
+		input = getInput();
+
+		if( input ) console.log(answer(input));
+	});
+});
+console._log = console.log;
+console.log = function(){
+	var first = true;
+	for( var i = 0; i < arguments.length; i++ ) {
+		if( ! first ) output.innerHTML += ", ";
+		output.innerHTML += arguments[i];
+		first = false;
+	}
+	output.innerHTML += "\n";
+	console._log(arguments);
+}
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

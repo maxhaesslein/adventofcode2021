@@ -1,8 +1,49 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"/>
 <script type="text/javascript">
 
-function answer( input ) {
-	var answer = false;
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	input = input.map( function(el){
+		return parseInt(el, 10);
+	});
+
+	return input;
+}
+
+function answer1( input ) {
+	var answer = 0;
+
+	var lastValue = 100000000;
+	for( var i = 0; i < input.length; i++ ) {
+		var currentValue = input[i];
+
+		if( currentValue > lastValue ) answer++;
+
+		lastValue = currentValue;
+	}
+
+	return answer;
+}
+
+function answer2( input ) {
+	var answer = 0;
+
+	var lastSum = 10000000;
+	for( var i = 0; i < input.length; i++ ) {
+		var currentValue = input[i],
+			currentPrevValue = input[i-1],
+			currentNextValue = input[i+1];
+
+		if ( ! currentPrevValue || ! currentNextValue ) continue;
+
+		var currentSum = currentValue+currentPrevValue+currentNextValue;
+
+		if( currentSum > lastSum ) answer++;
+
+		lastSum = currentSum;
+	}
 
 	return answer;
 }
@@ -17,27 +58,14 @@ function getInput() {
 
 	return input;
 }
-var output;
 window.addEventListener('load',function(){
-	output = document.getElementById('output');
+	var output = document.getElementById('output');
 	document.getElementById('start').addEventListener('click', function(){
-		output.innerHTML = "";
-		input = getInput();
-
-		if( input ) console.log(answer(input));
+		var input = prepareInput(getInput());
+		output.innerHTML = answer1(input);
+		output.innerHTML += "\n"+answer2(input);
 	});
 });
-console._log = console.log;
-console.log = function(){
-	var first = true;
-	for( var i = 0; i < arguments.length; i++ ) {
-		if( ! first ) output.innerHTML += ", ";
-		output.innerHTML += arguments[i];
-		first = false;
-	}
-	output.innerHTML += "\n";
-	console._log(arguments);
-}
 </script>
 <style>
 pre {

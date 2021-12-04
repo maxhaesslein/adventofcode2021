@@ -1,0 +1,169 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n\n");
+
+	var boards = [];
+
+	for( var i = 1; i < input.length; i++ ) {
+		var board = input[i].split("\n");
+		for( var j = 0; j < board.length; j++ ) {
+			board[j] = board[j].trim().split(/\s+/);
+			board[j] = board[j].map( function(el){
+				return parseInt(el, 10);
+			});
+		}
+
+		boards.push( board );
+	}
+
+	var randomNumbers = input[0].split(',');
+	randomNumbers = randomNumbers.map( function(el){
+		return parseInt(el, 10);
+	});
+
+	var output = {
+		'randomNumbers': randomNumbers,
+		'boards': boards
+	}
+
+	return output;
+}
+
+function answer1( input ) {
+	var answer = false;
+
+	outerLoop:
+	for( var numberCount = 0; numberCount < input['randomNumbers'].length; numberCount++ ) {
+		var randomNumber = input['randomNumbers'][numberCount];
+
+		for( var boardNumber = 0; boardNumber < input['boards'].length; boardNumber++ ) {
+			input['boards'][boardNumber] = markNumberOnBoard( input['boards'][boardNumber], randomNumber );
+
+			var board = input['boards'][boardNumber];
+
+			if( checkBoard( board ) ) {
+				var unmarkedNumbers = getUnmarkedNumbersSum( board );
+				answer = unmarkedNumbers * randomNumber;
+				break outerLoop;
+			}
+		}
+
+	}
+
+	return answer;
+}
+
+function markNumberOnBoard( board, number ) {
+	for( var x = 0; x < board.length; x++ ) {
+		for( var y = 0; y < board[x].length; y++ ) {
+			if( board[x][y] === number ) {
+				board[x][y] = 'x'+board[x][y];
+			}
+		}
+	}
+
+	return board;
+}
+
+function checkBoard( board ) {
+	if( ! board ) return false;
+	var checkColumnCount = [];
+	for( var x = 0; x < board.length; x++ ) {
+		var checkedLineCount = 0;
+		for( var y = 0; y < board[x].length; y++ ) {
+			if( board[x][y][0] == 'x' ) {
+				checkedLineCount++;
+
+				if( ! checkColumnCount[y] ) checkColumnCount[y] = 0;
+				checkColumnCount[y]++;
+			}
+		}
+		if( checkedLineCount >= board[x].length ) return true;
+	}
+
+	for( var i = 0; i < checkColumnCount.length; i++ ) {
+		if( checkColumnCount[i] >= board.length ) return true;
+	}
+
+	return false;
+}
+
+function getUnmarkedNumbersSum( board ) {
+	var unmarkedNumbersSum = 0;
+	for( var x = 0; x < board.length; x++ ) {
+		for( var y = 0; y < board[x].length; y++ ) {
+			if( board[x][y][0] != 'x' ) {
+				unmarkedNumbersSum += board[x][y];
+			}
+		}
+	}
+
+	return unmarkedNumbersSum;
+}
+
+function answer2( input ) {
+	var answer = false,
+		numberOfFinishedBoards = 0;
+
+	outerLoop:
+	for( var numberCount = 0; numberCount < input['randomNumbers'].length; numberCount++ ) {
+		var randomNumber = input['randomNumbers'][numberCount];
+
+		for( var boardNumber = 0; boardNumber < input['boards'].length; boardNumber++ ) {
+			if( ! input['boards'][boardNumber] ) continue;
+
+			input['boards'][boardNumber] = markNumberOnBoard( input['boards'][boardNumber], randomNumber );
+
+			var board = input['boards'][boardNumber].slice();
+
+			if( checkBoard( board ) ) {
+				numberOfFinishedBoards++;
+				input['boards'][boardNumber] = false;
+
+				if( numberOfFinishedBoards >= input['boards'].length ) {
+					var unmarkedNumbers = getUnmarkedNumbersSum( board );
+					answer = unmarkedNumbers * randomNumber;
+					break outerLoop;
+				}
+			}
+		}
+
+	}
+
+	return answer;
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

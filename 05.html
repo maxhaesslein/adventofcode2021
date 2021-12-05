@@ -1,0 +1,201 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	input = input.map( function(el){
+		el = el.split(" -> ");
+
+		el = el.map( function(e){
+			e = e.split(',');
+			return {x: parseInt(e[0],10), y: parseInt(e[1],10)};
+		});
+
+		return el;
+	});
+
+	return input;
+}
+
+function answer1( input ) {
+
+	input = filterHorizontalVerticalLines( input );
+
+	var maxX = getGridSize( input, 'x' ),
+		maxY = getGridSize( input, 'y' );
+
+	var grid = createGrid( maxX, maxY );
+
+	for( var i = 0; i < input.length; i++ ) {
+		var line = input[i];
+
+		grid = drawLine( grid, line );
+	}
+
+	return countPointsWithAtLeast( grid, 2 );
+}
+
+function answer2( input ) {
+
+	var maxX = getGridSize( input, 'x' ),
+		maxY = getGridSize( input, 'y' );
+
+	var grid = createGrid( maxX, maxY );
+
+	for( var i = 0; i < input.length; i++ ) {
+		var line = input[i];
+
+		grid = drawLine( grid, line, true );
+	}
+
+	return countPointsWithAtLeast( grid, 2 );
+}
+
+function drawLine( grid, line, debug ) {
+
+	var pointStart = line[0],
+		pointEnd = line[1];
+
+	if( pointStart.y == pointEnd.y ) {
+		// horizontal
+
+		var startX = pointStart.x,
+			endX = pointEnd.x,
+			y = pointStart.y;
+
+		if( startX > endX ) {
+			startX = pointEnd.x;
+			endX = pointStart.x;
+		}
+
+		for( var x = startX; x <= endX; x++ ) {
+			grid[y][x]++;
+		}
+
+		return grid;
+	}
+
+	if( pointStart.x == pointEnd.x ) {
+		// vertical
+
+		var startY = pointStart.y,
+			endY = pointEnd.y,
+			x = pointStart.x;
+
+		if( startY > endY ) {
+			startY = pointEnd.y;
+			endY = pointStart.y;
+		}
+
+		for( var y = startY; y <= endY; y++ ) {
+			grid[y][x]++;
+		}
+
+		return grid;
+	}
+
+	// 45 degree
+	var startPoint = line[0],
+		endPoint = line[1];
+
+	if( startPoint.y > endPoint.y ) {
+		startPoint = line[1];
+		endPoint = line[0];
+	}
+
+	var x = startPoint.x,
+		xDirection = -1;
+
+	if( startPoint.x < endPoint.x ) {
+		xDirection = 1;
+	}
+
+	for( var y = startPoint.y; y <= endPoint.y; y++ ) {
+		grid[y][x]++;
+		x += xDirection;
+	}
+
+	return grid;
+}
+
+function filterHorizontalVerticalLines( input ) {
+
+	input = input.filter( function(el){
+		return ( el[0].x == el[1].x || el[0].y == el[1].y );
+	});
+
+	return input;
+}
+
+function getGridSize( input, pos ){
+	var max = 0;
+	for( var i = 0; i < input.length; i++ ) {
+		var el = input[i];
+
+		if( el[0][pos] > max ) max = el[0][pos];
+		if( el[1][pos] > max ) max = el[1][pos];
+	}
+
+	max++;
+
+	return max;
+}
+
+function createGrid( maxX, maxY ) {
+	var grid = [];
+
+	for( var y = 0; y < maxY; y++ ) {
+		var line = [];
+		for( var x = 0; x < maxX; x++ ) {
+			line.push(0);
+		}
+		grid.push(line);
+	}
+
+	return grid;
+}
+
+function countPointsWithAtLeast( grid, minNumber ){
+	var numberOfPoints = 0;
+	for( var y = 0; y < grid.length; y++ ) {
+		var line = grid[y];
+		for( var x = 0; x < line.length; x++ ) {
+			if( grid[y][x] >= minNumber ) numberOfPoints++;
+		}
+	}
+	return numberOfPoints;
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split(",");
+
+	input = input.map(function(el){return parseInt(el,10)});
+
+	return input;
+}
+
+function answer1( input ) {
+	return numberOfFishAfterDays( input, 80 );
+}
+
+function numberOfFishAfterDays( input, days ) {
+	var numberOfFish = getFishArray( input );
+
+	for( var day = 1; day <= days; day++ ){
+
+		zeroDays = numberOfFish.shift();
+
+		numberOfFish.push(zeroDays);
+		numberOfFish[6] += zeroDays;
+
+	}
+
+	return countFish(numberOfFish);
+}
+
+function getFishArray( input ) {
+
+	var numberOfFish = Array(9).fill(0);
+
+	for( var i = 0; i < input.length; i++ ) {
+		var daysLeft = input[i];
+		numberOfFish[daysLeft]++;
+	}
+
+	return numberOfFish;
+}
+
+function countFish( numberOfFish ){
+	var number = 0;
+
+	for( var i = 0; i < numberOfFish.length; i++ ) {
+		number += numberOfFish[i];
+	}
+
+	return number;
+}
+
+function answer2( input ) {
+	return numberOfFishAfterDays( input, 256 );
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

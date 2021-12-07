@@ -1,0 +1,123 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split(",");
+	input = input.map(function(el){
+		return parseInt(el, 10);
+	});
+
+	return input;
+}
+
+function answer1( input ) {
+
+	var maxNumber = getMaxNumber(input),
+		minNumber = 0;
+
+	var lowestFuelAmount = 9999999999999;
+
+	for( var i = minNumber; i <= maxNumber; i++ ) {
+		var currentFuel = getFuel( input, i );
+
+		if( currentFuel < lowestFuelAmount ) {
+			lowestFuelAmount = currentFuel;
+		}
+	}
+
+	return lowestFuelAmount;
+}
+
+function answer2( input ) {
+
+	var maxNumber = getMaxNumber(input),
+		minNumber = 0;
+
+	var lowestFuelAmount = 9999999999999;
+
+	for( var i = minNumber; i <= maxNumber; i++ ) {
+		var currentFuel = getFuelPart2( input, i );
+
+		if( currentFuel < lowestFuelAmount ) {
+			lowestFuelAmount = currentFuel;
+		}
+	}
+
+	return lowestFuelAmount;
+}
+
+function getFuel( input, number ) {
+
+	var fuel = 0;
+
+	for( var i = 0; i < input.length; i++ ) {
+		var currentNumber = input[i];
+		var currentFuel = number - currentNumber;
+		if( currentFuel < 0 ) currentFuel *= -1;
+
+		fuel += currentFuel;
+	}
+
+	return fuel;
+}
+
+function getFuelPart2( input, number ) {
+
+	var fuel = 0;
+
+	for( var i = 0; i < input.length; i++ ) {
+		var currentNumber = input[i];
+
+		// NOTE: there surely is a way nicer solution, but this works too
+		// and I am lazy ...
+		var currentFuel = 0,
+			currentSteps = number - currentNumber;
+		if( currentSteps < 0 ) currentSteps *= -1;
+
+		var currentFuelStep = 1;
+		for( var j = 0; j < currentSteps; j++ ) {
+			currentFuel += currentFuelStep;
+			currentFuelStep++;
+		}
+
+		fuel += currentFuel;
+	}
+
+	return fuel;
+}
+
+function getMaxNumber( input ){
+	return Math.max.apply( null, input );
+}
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

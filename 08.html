@@ -1,0 +1,173 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	input = input.map( function(el){
+		return el.split(' | ').map( function(e){
+			return e.split(' ');
+		});
+	});
+
+	return input;
+}
+
+function answer1( input ) {
+	var numberOfDigits1478 = 0;
+
+	for( var i = 0; i < input.length; i++ ) {
+		var line = input[i],
+			digits = line[1];
+
+		for( var j = 0; j < digits.length; j++ ) {
+			var digit = digits[j];
+
+			if( digit.length == 2 || digit.length == 4 || digit.length == 3 || digit.length == 7 ) {
+				numberOfDigits1478++;
+			}
+		}
+	}
+
+	return numberOfDigits1478;
+}
+
+function answer2( input ) {
+	var sumOfOutputValues = 0;
+
+	for( var i = 0; i < input.length; i++ ) {
+		var line = input[i],
+			signalPatterns = line[0],
+			digits = line[1],
+			allNumbers = signalPatterns.concat(digits),
+			groups = [];
+
+		// NOTE: there is for sure a much faster way than this, but it works ...
+
+		for( var j = 0; j < allNumbers.length; j++ ) {
+			var pattern = allNumbers[j];
+
+			if( pattern.length == 2 ) {
+				groups[0] = pattern.split('');
+			}
+		}
+
+		for( var j = 0; j < allNumbers.length; j++ ) {
+			var pattern = allNumbers[j];
+
+			if( pattern.length == 3 ) {
+				var letters = pattern.split('');
+				for( var k = 0; k < letters.length; k++ ) {
+					var letter = letters[k];
+					if( groups[0].indexOf(letter) == -1 ) {
+						if( ! groups[1] ) groups[1] = [];
+						groups[1].push(letter);
+					}
+				}
+			}
+		}
+
+		for( var j = 0; j < allNumbers.length; j++ ) {
+			var pattern = allNumbers[j];
+
+			if( pattern.length == 4 ) {
+				var letters = pattern.split('');
+				for( var k = 0; k < letters.length; k++ ) {
+					var letter = letters[k];
+					if( groups[0].indexOf(letter) == -1 ) {
+						if( ! groups[2] ) groups[2] = [];
+						groups[2].push(letter);
+					}
+				}
+			}
+		}
+
+		for( var j = 0; j < allNumbers.length; j++ ) {
+			var pattern = allNumbers[j];
+
+			var letters = pattern.split('');
+			for( var k = 0; k < letters.length; k++ ) {
+				var letter = letters[k];
+				if( groups[0].indexOf(letter) == -1 && groups[1].indexOf(letter) == -1 && groups[2].indexOf(letter) == -1 ) {
+					if( ! groups[3] ) groups[3] = [];
+					groups[3].push(letter);
+				}
+			}
+		}
+
+		var number = "";
+		for( var j = 0; j < digits.length; j++ ) {
+			var digit = digits[j];
+
+			number += getNumber( digit, groups );
+		}
+
+		var outputValue = parseInt(number, 10);
+
+		sumOfOutputValues += outputValue;
+	}
+
+	return sumOfOutputValues;
+}
+
+function getNumber( digit, groups ) {
+
+	var decode = {
+		2112: 0,
+		2000: 1,
+		1112: 2,
+		2111: 3,
+		2020: 4,
+		1121: 5,
+		1122: 6,
+		2100: 7,
+		2122: 8,
+		2121: 9
+	};
+
+	var counted = "";
+	for( var i = 0; i < groups.length; i++ ){
+		var group = groups[i];
+		var count = 0;
+		for( var j = 0; j < digit.length; j++ ) {
+			if( group.indexOf(digit[j]) != -1 ) {
+				count++;
+			}
+		}
+		counted += count;
+	}
+
+	return decode[counted];
+}
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

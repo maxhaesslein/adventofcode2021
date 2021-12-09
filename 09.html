@@ -1,0 +1,202 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	var stride = input[0].length;
+	var input = {
+		stride: stride,
+		map: input.join('')
+	}
+
+	return input;
+}
+
+function answer1( input ) {
+
+	var lowPoints = getLowPoints( input );
+
+	var sum = 0;
+	for( var i = 0; i < lowPoints.length; i++ ){
+		var pointValue = input.map[lowPoints[i]];
+		var riskLevel = parseInt(pointValue, 10) + 1;
+		sum += riskLevel;
+	}
+
+	return sum;
+
+}
+
+function answer2( input ) {
+
+	var lowPoints = getLowPoints( input );
+
+	var basins = [];
+
+	for( var i = 0; i < lowPoints.length; i++ ) {
+		var lowPoint = lowPoints[i],
+			basin = [];
+
+		basin.push(lowPoint);
+
+		basin = addAdjacent( basin, lowPoint, input );
+
+		basins.push(basin);
+	}
+
+	var basinSizes = [];
+	for( var i = 0; i < basins.length; i++ ) {
+		var basin = basins[i];
+
+		basinSizes.push(basin.length);
+	}
+
+	basinSizes.sort(function(a,b){
+		return b - a;
+	});
+
+	var answer = 1;
+	for( var i = 0; i < 3; i++ ) {
+		answer *= basinSizes[i];
+	}
+
+	return answer;
+
+}
+
+function addAdjacent( basin, point, input ){
+
+	// check left point(s)
+	if( point%input.stride != 0 ) {
+		basin = addNextAdjacent( basin, point, input, -1 );
+	}
+
+	// check right point(s)
+	if( point%input.stride != input.stride-1 ) {
+		basin = addNextAdjacent( basin, point, input, +1 );
+	}
+
+	// check top point(s)
+	basin = addNextAdjacent( basin, point, input, -input.stride );
+
+	// check bottom point(s)
+	basin = addNextAdjacent( basin, point, input, +input.stride );
+
+	return basin;
+
+}
+
+function addNextAdjacent( basin, point, input, direction ) {
+
+	var adjacentPoint = point+direction;
+
+	if( basin.indexOf( adjacentPoint ) != -1 ) {
+		return basin;
+	}
+
+	if( adjacentPoint < 0 ) {
+		return basin;
+	}
+
+	if( adjacentPoint >= input.map.length ) {
+		return basin;
+	}
+
+	if( input.map[adjacentPoint] >= 9 ) {
+		return basin;
+	}
+
+	basin.push(adjacentPoint);
+
+	basin = addAdjacent( basin, adjacentPoint, input );
+
+	return basin;
+
+}
+
+function getLowPoints( input ){
+
+	var lowPoints = [];
+
+	for( var i = 0; i < input.map.length; i++ ){
+		var cell = input.map[i];
+
+		var left = false;
+		if( i > 0 ) {
+			if( input.map[i-1] > cell ){
+				left = true;
+			}
+		} else {
+			left = true;
+		}
+
+		var right = false;
+		if( i < input.map.length ) {
+			if( input.map[i+1] > cell ) {
+				right = true;
+			}
+		} else {
+			right = true;
+		}
+
+		var top = false;
+		if( i > input.stride ) {
+			if( input.map[i-input.stride] > cell ) {
+				top = true;
+			}
+		} else {
+			top = true;
+		}
+
+		var bottom = false;
+		if( i < input.map.length-input.stride ) {
+			if( input.map[i+input.stride] > cell ) {
+				bottom = true;
+			}
+		} else {
+			bottom = true;
+		}
+
+		if( left && right && top && bottom ) {
+			lowPoints.push(i);
+		}
+
+	}
+
+	return lowPoints;
+
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	return input;
+}
+
+function answer1( input ) {
+
+	var elements = [];
+
+	for( var i = 0; i < input.length; i++ ) {
+		var line = input[i];
+
+		var firstIllegalCharacter = findIllegalCharacter( line );
+
+		if( firstIllegalCharacter ) elements.push( firstIllegalCharacter );
+	}
+
+	var score = getSyntaxErrorScore( elements );
+	return score;
+}
+
+function answer2( input ) {
+
+	var incompleteLines = [];
+
+	for( var i = 0; i < input.length; i++ ) {
+		var line = input[i];
+
+		if( findIllegalCharacter(line) ) continue;
+
+		incompleteLines.push( line );
+	}
+
+	var autocompleteStrings = [];
+
+	for( var i = 0; i < incompleteLines.length; i++ ) {
+		var line = incompleteLines[i];
+
+		var autocompleteString = getAutocompleteString( line );
+		autocompleteStrings.push( autocompleteString );
+	}
+
+	var pointList = [];
+	for( var i = 0; i < autocompleteStrings.length; i++ ) {
+		pointList.push( getAutocompleteScore( autocompleteStrings[i] ) );
+	}
+
+	pointList.sort(function(a,b){
+		return a - b;
+	});
+
+	var middleScore = pointList[(pointList.length-1)/2];
+
+	return middleScore;
+
+}
+
+function getAutocompleteString( line ) {
+
+	var autocompleteString = "";
+
+	var stack = [];
+
+	for( var i = 0; i < line.length; i++ ) {
+		var character = line[i];
+
+		if( character == '(' || character == '[' || character == '{' || character == '<' ) {
+			stack.push( character );
+			continue;
+		}
+
+		stack.pop();
+
+	}
+
+	while( stack.length ) {
+		var character = stack.pop();
+
+		if( character == '(' ) autocompleteString += ')';
+		if( character == '[' ) autocompleteString += ']';
+		if( character == '{' ) autocompleteString += '}';
+		if( character == '<' ) autocompleteString += '>';
+	}
+
+	return autocompleteString;
+}
+
+function findIllegalCharacter( line ) {
+
+	var firstIllegalCharacter = false;
+
+	var stack = [];
+
+	for( var i = 0; i < line.length; i++ ) {
+		var character = line[i];
+
+		if( character == '(' || character == '[' || character == '{' || character == '<' ) {
+			stack.push( character );
+			continue;
+		}
+
+		var lastElementOnStack = stack.pop();
+
+		if( ( character == ')' && lastElementOnStack == '(' ) ||
+			( character == ']' && lastElementOnStack == '[' ) ||
+			( character == '}' && lastElementOnStack == '{' ) ||
+			( character == '>' && lastElementOnStack == '<' ) ) {
+			continue;
+		}
+
+		return character;
+
+	}
+
+	return false;
+}
+
+function getSyntaxErrorScore( elements ) {
+
+	var pointTable = {
+		')': 3,
+		']': 57,
+		'}': 1197,
+		'>': 25137
+	};
+
+	var points = 0;
+
+	for( var i = 0; i < elements.length; i++ ) {
+		points += pointTable[elements[i]];
+	}
+
+	return points;
+}
+
+function getAutocompleteScore( elements ) {
+
+	var pointTable = {
+		')': 1,
+		']': 2,
+		'}': 3,
+		'>': 4
+	};
+
+	var points = 0;
+
+	for( var i = 0; i < elements.length; i++ ) {
+		points *= 5;
+		points += pointTable[elements[i]];
+	}
+
+	return points;
+}
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

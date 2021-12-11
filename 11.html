@@ -1,0 +1,182 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	input = input.map(function(line){
+		return line.split('').map(function(cell){
+			return parseInt(cell, 10);
+		});
+	});
+
+	return input;
+}
+
+function answer1( field ) {
+
+	var cycles = 100,
+		numberOfFlashes = 0;
+
+	for( var cycle = 0; cycle < cycles; cycle++ ) {
+		var simulation = simulate(field);
+		field = simulation.field;
+
+		numberOfFlashes += simulation.numberOfFlashes;
+
+		//logField( simulation.field );
+
+	}
+
+	return numberOfFlashes;
+}
+
+function answer2( field ) {
+
+	var cycle = 1,
+		syncronized = false;
+
+	do {
+
+		var simulation = simulate(field);
+		field = simulation.field;
+
+		//logField( field );
+
+		syncronized = checkIfSyncronized( field );
+
+		cycle++;
+
+	} while ( ! syncronized );
+
+	return cycle;
+}
+
+function logField( field ) {
+	console.log(JSON.parse(JSON.stringify(field)).map(function(line){
+		line = line.map(function(cell){
+
+			if( cell == 0 ) return '[0]';
+
+			return ' '+cell+' ';
+		});
+		return line.join('');
+	}).join("\n"));
+}
+
+function checkIfSyncronized( field ) {
+
+	for( var y = 0; y < field.length; y++ ) {
+		for( var x = 0; x < field[y].length; x++ ) {
+			if( field[y][x] !== 0 ) return false;
+		}
+	}
+
+	return true;
+}
+
+function simulate( field ) {
+
+	var simulation = {
+		field: field,
+		numberOfFlashes: 0
+	};
+
+	simulation.field = incrementEnergy( simulation.field );
+
+	simulation = checkFlashes( simulation );
+
+	return simulation;
+}
+
+function incrementEnergy( field ) {
+	for( var y = 0; y < field.length; y++ ){
+		for( var x = 0; x < field[y].length; x++ ) {
+			field[y][x]++;
+		}
+	}
+
+	return field;
+}
+
+function checkFlashes( simulation ) {
+
+	var checkForNextFlash;
+
+	do {
+
+		checkForNextFlash = false;
+
+		var newField = JSON.parse(JSON.stringify(simulation.field)); // this creates a deep copy
+
+		for( var y = 0; y < simulation.field.length; y++ ){
+			for( var x = 0; x < simulation.field[y].length; x++ ) {
+				if( simulation.field[y][x] >= 10 ) {
+
+					newField = incrementNeighbour( newField, x-1, y-1 );
+					newField = incrementNeighbour( newField, x  , y-1 );
+					newField = incrementNeighbour( newField, x+1, y-1 );
+
+					newField = incrementNeighbour( newField, x-1, y   );
+					newField = incrementNeighbour( newField, x+1, y   );
+
+					newField = incrementNeighbour( newField, x-1, y+1 );
+					newField = incrementNeighbour( newField, x  , y+1 );
+					newField = incrementNeighbour( newField, x+1, y+1 );
+
+					newField[y][x] = 0;
+
+					simulation.numberOfFlashes++;
+
+					checkForNextFlash = true;
+				}
+			}
+		}
+
+		simulation.field = newField;
+	} while( checkForNextFlash );
+
+	return simulation;
+}
+
+function incrementNeighbour( field, x, y ) {
+
+	if( field[y] && field[y][x] ) {
+		field[y][x]++;
+	}
+
+	return field;
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

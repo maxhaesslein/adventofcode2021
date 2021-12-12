@@ -1,0 +1,153 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	input = input.map( function(el){
+		return el.split('-');
+	});
+
+	// NOTE: add reverse connections
+	var connections = [];
+	for( var i = 0; i < input.length; i++ ) {
+		var connection = input[i];
+		connections.push( connection );
+
+		if( connection[0] == 'start' || connection[1] == 'end' ) continue;
+
+		connections.push( [connection[1], connection[0]] );
+	}
+
+	return connections;
+}
+
+function answer1( connections ) {
+
+	var paths = [ ['start'] ];
+
+	paths = getPaths( paths, connections, false );
+
+	paths = removePathsWithDeadEnd( paths );
+
+	return paths.length;
+}
+
+function answer2( connections ) {
+
+	var paths = [ ['start'] ];
+
+	paths = getPaths( paths, connections, true );
+
+	paths = removePathsWithDeadEnd( paths );
+
+	return paths.length;
+}
+
+function removePathsWithDeadEnd( paths ) {
+
+	for( var i = paths.length-1; i >= 0; i-- ) {
+		var path = paths[i];
+
+		if( path[path.length-1] == 'end' ) continue;
+
+		paths.splice(i, 1);
+	}
+
+	return paths;
+}
+
+function getPaths( paths, connections, visitSmallCaveTwice ) {
+
+	var path = paths[paths.length-1],
+		lastPoint = path[path.length-1];
+
+	if( lastPoint == 'end' ) return paths;
+
+	if( visitSmallCaveTwice ) {
+		for( var i = 0; i < path.length; i++ ) {
+			var point = path[i];
+
+			if( isSmallCave(point) && numberOfCaveInPath( path, point ) >= 2 ) {
+				visitSmallCaveTwice = false;
+				break;
+			}
+		}
+	}
+
+	var nextPoints = [];
+	for( var i = 0; i < connections.length; i++ ) {
+		var connection = connections[i];
+
+		if( connection[0] != lastPoint ) continue;
+
+		var nextPoint = connection[1];
+
+		if( nextPoint == 'start' ) continue;
+
+		if( isSmallCave( nextPoint ) && ! visitSmallCaveTwice && caveExistsInPath( path, nextPoint ) ) continue;
+
+		nextPoints.push( nextPoint );
+	}
+
+	for( var i = 0; i < nextPoints.length; i++ ) {
+		var nextPoint = nextPoints[i];
+
+		var newPath = path.slice(); // NOTE: duplicate array
+		newPath.push(nextPoint);
+		paths.push(newPath);
+
+		paths = getPaths( paths, connections, visitSmallCaveTwice );
+	}
+
+	return paths;
+}
+
+function caveExistsInPath( path, cave ) {
+	return ( path.indexOf( cave ) !== -1 );
+}
+
+function isSmallCave( caveName ) {
+	return ( caveName.toLowerCase() === caveName );
+}
+
+function numberOfCaveInPath( path, cave ) {
+	var numberOfCave = 0;
+	for( var i = 0; i < path.length; i++ ){
+		if( path[i] === cave ) numberOfCave++;
+	}
+	return numberOfCave;
+}
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+(Takes a long time because of part 2)
+</body></html>

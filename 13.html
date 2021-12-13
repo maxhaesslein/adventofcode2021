@@ -1,0 +1,169 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n\n");
+
+	var instructions = {
+		'points': input[0].split('\n').map(function(el){
+				return el.split(',').map(function(e){
+					return parseInt(e, 10);
+				});
+			}),
+		'folds': input[1].split('\n').map(function(el){
+				el = el.replace('fold along ','').split('=');
+				el[1] = parseInt(el[1], 10);
+				return el;
+			})
+	};
+
+	return instructions;
+}
+
+function answer1( instructions ) {
+
+	var paper = createPaper( instructions );
+
+	var foldInstruction = instructions.folds[0];
+	paper = fold( paper, foldInstruction );
+
+	return numberOfVisibleDots( paper );
+}
+
+function answer2( instructions ) {
+
+	var paper = createPaper( instructions );
+
+	for( var i = 0; i < instructions.folds.length; i++ ) {
+		var foldInstruction = instructions.folds[i];
+		paper = fold( paper, foldInstruction );
+	}
+
+	debugPrintPaper( paper );
+
+	return 'see console for answer';
+}
+
+function debugPrintPaper( input ) {
+	var paper = JSON.parse(JSON.stringify(input)); // deep clone array
+	for( var y = 0; y < paper.length; y ++ ) {
+		var line = paper[y].map(function(el){
+			if( ! el ) return ' ';
+			else return el;
+		});
+		console.log(line.join(' '));
+	}
+}
+
+function createPaper( instructions ) {
+
+	var width = getHighestValue('x', instructions)+1,
+		height = getHighestValue('y', instructions)+1;
+
+	var paper = Array.apply(null, Array(height));
+	paper = paper.map(function(el){
+		return Array.apply(null, Array(width));
+	});
+
+	for( var i = 0; i < instructions.points.length; i++ ) {
+		var point = instructions.points[i];
+
+		paper[point[1]][point[0]] = '#';
+	}
+
+	return paper;
+}
+
+function getHighestValue( direction, instructions ) {
+
+	var value = 0,
+		key = 0;
+
+	if( direction == 'y' ) key = 1;
+
+	for( var i = 0; i < instructions.points.length; i++ ) {
+		if( instructions.points[i][key] > value ) value = instructions.points[i][key];
+	}
+
+	return value;
+}
+
+function fold( paper, instruction ) {
+
+	var diff;
+	if( instruction[0] == 'y' ) {
+		diff = 1;
+		for( var y = instruction[1]+1; y < paper.length; y++ ) {
+
+			for( var x = 0; x < paper[y].length; x++ ) {
+				if( ! paper[y][x] ) continue;
+
+				paper[y-diff-1][x] = '#';
+			}
+
+			diff += 2;
+		}
+
+		paper = paper.slice(0,instruction[1]+1);
+	} else {
+		for( var y = 0; y < paper.length; y ++ ) {
+			diff = 0;
+			for( var x = instruction[1]+1; x < paper[y].length; x++ ) {
+
+				diff += 2;
+
+				if( ! paper[y][x] ) continue;
+
+				paper[y][x-diff] = '#';
+			}
+
+			paper[y] = paper[y].slice(0,instruction[1]);
+		}
+	}
+
+	return paper;
+}
+
+function numberOfVisibleDots( paper ) {
+	var number = 0;
+
+	for( var y = 0; y < paper.length; y++ ) {
+		for( var x = 0; x < paper[y].length; x++ ) {
+			if( paper[y][x] == '#' ) number++;
+		}
+	}
+
+	return number;
+}
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

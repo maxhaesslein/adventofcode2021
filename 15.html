@@ -1,0 +1,145 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = input.split("\n");
+
+	input = input.map(function(el){
+		return el.split('').map(function(e){
+			return parseInt(e, 10);
+		});
+	});
+
+	return input;
+}
+
+function answer1( map ) {
+	return dijkstra( map );
+}
+
+function answer2( map ) {
+
+	// TODO
+
+	return 'not implemented yet';
+	//return dijkstra( map );
+}
+
+function dijkstra( map ){
+	// NOTE: ok, let's read how Dijkstra's algorithm works ... and then implement it
+
+	var height = map.length,
+		width = map[0].length;
+
+	var start = "0,0",
+		target = (width-1)+","+(height-1);
+
+	var trackedCosts = {
+		"1,0": map[0][1],
+		"0,1": map[1][0]
+	};
+	trackedCosts[target] = Infinity;
+
+	var trackedParents = {
+		"1,0": "0,0",
+		"0,1": "0,0"
+	};
+	trackedParents[target] = null;
+
+	var processedNodes = [];
+
+	var node = findLowestCostNode( trackedCosts, processedNodes );
+
+	while( node ) {
+		var costToReachNode = trackedCosts[node];
+
+		var childrenOfNode = {},
+			mapPosition = node.split(','),
+			currentX = parseInt(mapPosition[0],10),
+			currentY = parseInt(mapPosition[1],10);
+
+		if( currentX - 1 >= 0 ) childrenOfNode[(currentX-1)+','+currentY] = map[currentY][(currentX-1)];
+		if( currentX + 1 < width ) childrenOfNode[(currentX+1)+','+currentY] = map[currentY][(currentX+1)];
+		if( currentY - 1 >= 0 ) childrenOfNode[currentX+','+(currentY-1)] = map[(currentY-1)][currentX];
+		if( currentY + 1 < height ) childrenOfNode[currentX+','+(currentY+1)] = map[(currentY+1)][currentX];
+
+		for( var child in childrenOfNode ) {
+
+			var costFromNodeToChild = childrenOfNode[child],
+				costToChild = costToReachNode + costFromNodeToChild;
+
+			if( ! trackedCosts[child] || trackedCosts[child] > costToChild ) {
+				trackedCosts[child] = costToChild;
+				trackedParents[child] = node;
+			}
+		}
+
+		processedNodes.push( node );
+
+		node = findLowestCostNode( trackedCosts, processedNodes );
+
+	}
+
+	var optimalPath = [ target ],
+		parent = trackedParents[target];
+
+	while( parent != start ) {
+		optimalPath.push(parent);
+		parent = trackedParents[parent];
+	}
+	optimalPath.reverse();
+
+	return trackedCosts[target];
+}
+
+function findLowestCostNode( costs, processed ) {
+
+	lowestCostNodes = Object.keys(costs);
+	lowestCostNodes = lowestCostNodes.filter(function(item){
+		return processed.indexOf(item) === -1;
+	});
+	lowestCostNodes.sort(function(a,b){return costs[a]-costs[b]});
+
+	return lowestCostNodes[0];
+}
+
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+
+		console.time('answer1');
+		output.innerHTML = "Answer 1: "+answer1(input);
+		console.timeEnd('answer1');
+
+		console.time('answer2');
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+		console.timeEnd('answer2');
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+(Takes a long time because of not optimized code)
+</body></html>

@@ -3,63 +3,19 @@
 
 function prepareInput( input ) {
 
-	input = input.split("\n")
+	input = input.split("\n");
 
-	var stride = input[0].length;
-	var input = {
-		stride: stride,
-		map: input.join('')
-	}
+	input = input.map(function(el){
+		return el.split('').map(function(e){
+			return parseInt(e, 10);
+		});
+	});
 
 	return input;
 }
 
-function answer1( input ) {
-
-	var stride = input.stride,
-		map = input.map,
-		start = 0
-		targetIndex = map.length-1,
-		trackedCosts = new Array(map.length),
-		processedNodes = [0];
-
-	trackedCosts[1] = parseInt(map[1], 10);
-	trackedCosts[stride] = parseInt(map[stride], 10);
-	trackedCosts[targetIndex] = Infinity;
-
-	var nodeIndex = findLowestCostNode( trackedCosts, processedNodes );
-
-	var count = 0;
-	while( nodeIndex ) {
-		var costToReachNode = trackedCosts[nodeIndex],
-			adjacentNodes = getAdjacentPoints( nodeIndex, stride, map.length, processedNodes );
-
-		for( var i = 0; i < adjacentNodes.length; i++ ) {
-			var adjacentNodeIndex = adjacentNodes[i];
-
-			if( trackedCosts[adjacentNodeIndex] ) continue;
-
-			var costFromNodeToChild = parseInt(map[adjacentNodeIndex]);
-
-			trackedCosts[adjacentNodeIndex] = costToReachNode + costFromNodeToChild;
-		}
-
-		processedNodes.push( nodeIndex );
-
-		nodeIndex = findLowestCostNode( trackedCosts, processedNodes );
-	}
-
-	var targetTopIndex = targetIndex-stride,
-		targetLeftIndex = targetIndex-1,
-		targetCost = parseInt(map[targetIndex], 10);
-
-	var topCost = trackedCosts[targetTopIndex]+targetCost,
-		leftCost = trackedCosts[targetLeftIndex]+targetCost;
-
-	if( topCost < leftCost ) return topCost;
-	if( leftCost < topCost ) return leftCost;
-
-	console.warn('something went wrong', topCost, leftCost);
+function answer1( map ) {
+	return dijkstra( map );
 }
 
 function answer2( map ) {
@@ -67,55 +23,85 @@ function answer2( map ) {
 	// TODO
 
 	return 'not implemented yet';
+	//return dijkstra( map );
 }
 
-function getAdjacentPoints( index, stride, mapLength, processedNodes ){
+function dijkstra( map ){
+	// NOTE: ok, let's read how Dijkstra's algorithm works ... and then implement it
 
-	var points = [];
+	var height = map.length,
+		width = map[0].length;
 
-	// check left point
-	if( index%stride != 0 && index >= 0 && processedNodes.indexOf(index-1) === -1 ) {
-		points.push(index-1);
+	var start = "0,0",
+		target = (width-1)+","+(height-1);
+
+	var trackedCosts = {
+		"1,0": map[0][1],
+		"0,1": map[1][0]
+	};
+	trackedCosts[target] = Infinity;
+
+	var trackedParents = {
+		"1,0": "0,0",
+		"0,1": "0,0"
+	};
+	trackedParents[target] = null;
+
+	var processedNodes = [];
+
+	var node = findLowestCostNode( trackedCosts, processedNodes );
+
+	while( node ) {
+		var costToReachNode = trackedCosts[node];
+
+		var childrenOfNode = {},
+			mapPosition = node.split(','),
+			currentX = parseInt(mapPosition[0],10),
+			currentY = parseInt(mapPosition[1],10);
+
+		if( currentX - 1 >= 0 ) childrenOfNode[(currentX-1)+','+currentY] = map[currentY][(currentX-1)];
+		if( currentX + 1 < width ) childrenOfNode[(currentX+1)+','+currentY] = map[currentY][(currentX+1)];
+		if( currentY - 1 >= 0 ) childrenOfNode[currentX+','+(currentY-1)] = map[(currentY-1)][currentX];
+		if( currentY + 1 < height ) childrenOfNode[currentX+','+(currentY+1)] = map[(currentY+1)][currentX];
+
+		for( var child in childrenOfNode ) {
+
+			var costFromNodeToChild = childrenOfNode[child],
+				costToChild = costToReachNode + costFromNodeToChild;
+
+			if( ! trackedCosts[child] || trackedCosts[child] > costToChild ) {
+				trackedCosts[child] = costToChild;
+				trackedParents[child] = node;
+			}
+		}
+
+		processedNodes.push( node );
+
+		node = findLowestCostNode( trackedCosts, processedNodes );
+
 	}
 
-	// check right point
-	if( index%stride != stride-1 && index < mapLength && processedNodes.indexOf(index+1) === -1 ) {
-		points.push(index+1);
-	}
+	var optimalPath = [ target ],
+		parent = trackedParents[target];
 
-	// check bottom point
-	if( index+stride < mapLength && processedNodes.indexOf(index+stride) === -1 ) {
-		points.push(index+stride);
+	while( parent != start ) {
+		optimalPath.push(parent);
+		parent = trackedParents[parent];
 	}
+	optimalPath.reverse();
 
-	// check top point
-	if( index-stride >= 0 && processedNodes.indexOf(index-stride) === -1 ) {
-		points.push(index-stride);
-	}
-
-	return points;
+	return trackedCosts[target];
 }
 
-function findLowestCostNode( lowestCostNodes, processedNodes ) {
+function findLowestCostNode( costs, processed ) {
 
-	var lowestCostIndex = false,
-		lowestCost = Infinity;
+	lowestCostNodes = Object.keys(costs);
+	lowestCostNodes = lowestCostNodes.filter(function(item){
+		return processed.indexOf(item) === -1;
+	});
+	lowestCostNodes.sort(function(a,b){return costs[a]-costs[b]});
 
-	for( index in lowestCostNodes ) {
-
-		index = parseInt( index, 10 );
-
-		if( processedNodes.indexOf(index) !== -1 ) continue;
-
-		var nodeCost = lowestCostNodes[index];
-
-		if( nodeCost >= lowestCost ) continue;
-
-		lowestCostIndex = index;
-		lowestCost = nodeCost;
-	}
-
-	return lowestCostIndex;
+	return lowestCostNodes[0];
 }
 
 

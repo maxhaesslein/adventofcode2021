@@ -1,0 +1,216 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script type="text/javascript">
+
+function prepareInput( input ) {
+
+	input = hex2bin( input );
+
+	return input;
+}
+
+function answer1( transmission ) {
+
+	var packet = readPacket( transmission );
+
+	return getSumOfVersionNumbers( packet );
+}
+
+function answer2( transmission ) {
+
+	var packet = readPacket( transmission );
+
+	return getResultOfTransmission( packet );
+}
+
+function getSumOfVersionNumbers( packet ) {
+
+	var sumOfVersionNumbers = parseInt( packet.version, 10 );
+
+	if( packet.type == 'operator' ) {
+		for( var i = 0; i < packet.content.length; i++ ) {
+			var subpacket = packet.content[i];
+			sumOfVersionNumbers += getSumOfVersionNumbers( subpacket );
+		}
+	}
+
+	return sumOfVersionNumbers;
+}
+
+function getResultOfTransmission( packet ) {
+
+	if( packet.type == 'value' ) return parseInt(packet.content, 10);
+
+	var subpackets = packet.content;
+
+	if( packet.typeId == '0' ) {
+		// sum
+		var value = 0;
+		for( var i = 0; i < subpackets.length; i++ ) {
+			var subpacket = subpackets[i];
+			value += getResultOfTransmission( subpacket );
+		}
+		return value;
+	} else if( packet.typeId == '1' ) {
+		// product
+		var value = 1;
+		for( var i = 0; i < subpackets.length; i++ ) {
+			var subpacket = subpackets[i];
+			value *= getResultOfTransmission( subpacket );
+		}
+		return value;
+	} else if( packet.typeId == '2' ) {
+		// minimum
+		var value = Infinity;
+		for( var i = 0; i < subpackets.length; i++ ) {
+			var subpacket = subpackets[i],
+				subValue = getResultOfTransmission( subpacket );
+			if( subValue < value ) value = subValue;
+		}
+		return value;
+	} else if( packet.typeId == '3' ) {
+		// maximum
+		var value = 0;
+		for( var i = 0; i < subpackets.length; i++ ) {
+			var subpacket = subpackets[i],
+				subValue = getResultOfTransmission( subpacket );
+			if( subValue > value ) value = subValue;
+		}
+		return value;
+	} else if( packet.typeId == '5' ) {
+		// greater than
+		if( subpackets.length != 2 ) console.warn( 'error in packet', packet);
+		var value1 = getResultOfTransmission( subpackets[0] ),
+			value2 = getResultOfTransmission( subpackets[1] );
+		if( value1 > value2 ) return 1;
+		else return 0;
+	} else if( packet.typeId == '6' ) {
+		// less than
+		if( subpackets.length != 2 ) console.warn( 'error in packet', packet);
+		var value1 = getResultOfTransmission( subpackets[0] ),
+			value2 = getResultOfTransmission( subpackets[1] );
+		if( value1 < value2 ) return 1;
+		else return 0;
+	} else if( packet.typeId == '7' ) {
+		// equal to
+		if( subpackets.length != 2 ) console.warn( 'error in packet', packet);
+		var value1 = getResultOfTransmission( subpackets[0] ),
+			value2 = getResultOfTransmission( subpackets[1] );
+		if( value1 == value2 ) return 1;
+		else return 0;
+	}
+
+	console.warn( 'error in packet', packet);
+}
+
+function readPacket( packet ) {
+
+	var packetHeader = packet.slice(0,6);
+
+	var version = packetHeader.slice(0,3),
+		typeId = packetHeader.slice(3,6),
+		content = false,
+		type = false,
+		pos = 6;
+
+	version = bin2dec(version);
+	typeId = bin2dec(typeId);
+
+	if( typeId == "4" ) {
+		type = "value";
+
+		var value = "";
+		while( pos < packet.length ) {
+			var end = packet[pos++];
+
+			value += packet[pos++]+packet[pos++]+packet[pos++]+packet[pos++];
+
+			if( end == "0" ) break; // NOTE: last packet
+		}
+
+		content = bin2dec( value );
+
+	} else {
+		type = "operator";
+
+		var mode = packet[6],
+			subpackets = [];
+
+		if( mode == "0" ) {
+			var totalLength = packet.slice(7,22);
+			totalLength = bin2dec(totalLength);
+			pos = 22;
+			var maxLength = pos+parseInt(totalLength, 10);
+
+			while( pos < maxLength ) {
+				var subpacket = readPacket( packet.slice(pos) );
+				pos += subpacket.length;
+				subpackets.push(subpacket);
+			}
+
+		} else if( mode == "1" ) {
+			var numberOfSubpackets = packet.slice(7,18);
+			numberOfSubpackets = parseInt(bin2dec(numberOfSubpackets), 10);
+			pos = 18;
+
+			while( subpackets.length < numberOfSubpackets ) {
+				var subpacket = readPacket( packet.slice(pos) );
+				pos += subpacket.length;
+				subpackets.push(subpacket);
+			}
+
+		}
+
+		content = subpackets;
+
+	}
+
+	return {
+		version: version,
+		typeId: typeId,
+		type: type,
+		content: content,
+		length: pos
+	}
+}
+
+function hex2bin( hex ) {
+	return hex.split('').map(function(i){
+		return parseInt( i, 16 ).toString(2).padStart(4, '0');
+	}).join('');
+}
+
+function bin2dec( bin ) {
+	return parseInt(bin, 2).toString(10);
+}
+
+
+
+function getInput() {
+	var textArea = document.getElementById('input');
+	var input = textArea.value;
+
+	if( ! input ) console.log("please provide an input");
+
+	return input;
+}
+window.addEventListener('load',function(){
+	var output = document.getElementById('output');
+	document.getElementById('start').addEventListener('click', function(){
+		var input = prepareInput(getInput());
+		output.innerHTML = "Answer 1: "+answer1(input);
+		output.innerHTML += "\nAnswer 2: "+answer2(input);
+	});
+});
+</script>
+<style>
+pre {
+	background: #eee;
+	min-height: 2em;
+}
+</style>
+</head>
+<body>
+<pre id="output"></pre>
+<textarea id="input"></textarea>
+<button id="start">start</button>
+</body></html>

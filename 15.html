@@ -20,10 +20,29 @@ function answer1( map ) {
 
 function answer2( map ) {
 
-	// TODO
+	for( var y = 0; y < map.length; y++ ) {
+		var lineLength = map[y].length;
+		for( var x = 0; x < lineLength; x++ ) {
+			for( var xMult = 1; xMult < 5; xMult++ ) {
+				map[y][x+lineLength*xMult] = map[y][x+lineLength*xMult-lineLength] + 1;
+				if( map[y][x+lineLength*xMult] > 9 ) map[y][x+lineLength*xMult] -= 9;
+			}
+		}
+	}
 
-	return 'not implemented yet';
-	//return getCheapestPath( map );
+	var yLength = map.length;
+	for( var yMult = 1; yMult < 5; yMult++ ) {
+		for( var y = 0; y < yLength; y++ ) {
+			var yOffset = yLength*yMult;
+			map[y+yOffset] = map[y+yOffset-yLength].map(function(el){
+				el = el+1;
+				if( el > 9 ) el = el-9;
+				return el;
+			});
+		}
+	}
+
+	return getCheapestPath( map );
 }
 
 function getCheapestPath( map ){
@@ -127,9 +146,11 @@ window.addEventListener('load',function(){
 		output.innerHTML = "Answer 1: "+answer1(input);
 		console.timeEnd('answer1');
 
-		console.time('answer2');
-		output.innerHTML += "\nAnswer 2: "+answer2(input);
-		console.timeEnd('answer2');
+		setTimeout(function(){
+			console.time('answer2');
+			output.innerHTML += "\nAnswer 2: "+answer2(input);
+			console.timeEnd('answer2');
+		}, 50);
 	});
 });
 </script>
@@ -144,5 +165,5 @@ pre {
 <pre id="output"></pre>
 <textarea id="input"></textarea>
 <button id="start">start</button>
-(Takes a long time because of not optimized code)
+(Takes a long time)
 </body></html>

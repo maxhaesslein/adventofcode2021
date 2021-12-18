@@ -15,7 +15,7 @@ function prepareInput( input ) {
 }
 
 function answer1( map ) {
-	return dijkstra( map );
+	return getCheapestPath( map );
 }
 
 function answer2( map ) {
@@ -23,87 +23,90 @@ function answer2( map ) {
 	// TODO
 
 	return 'not implemented yet';
-	//return dijkstra( map );
+	//return getCheapestPath( map );
 }
 
-function dijkstra( map ){
-	// NOTE: ok, let's read how Dijkstra's algorithm works ... and then implement it
+function getCheapestPath( map ){
 
 	var height = map.length,
-		width = map[0].length;
-
-	var start = "0,0",
+		width = map[0].length,
+		start = "0,0",
 		target = (width-1)+","+(height-1);
 
-	var trackedCosts = {
-		"1,0": map[0][1],
-		"0,1": map[1][0]
-	};
-	trackedCosts[target] = Infinity;
+	var processedNodes = [],
+		priorityCosts = [],
+		trackedCosts = {};
 
-	var trackedParents = {
-		"1,0": "0,0",
-		"0,1": "0,0"
-	};
-	trackedParents[target] = null;
+	addNodeCost( priorityCosts, trackedCosts, "1,0", map[0][1] );
+	addNodeCost( priorityCosts, trackedCosts, "0,1", map[1][0] );
+	addNodeCost( priorityCosts, trackedCosts, target, Infinity );
 
-	var processedNodes = [];
-
-	var node = findLowestCostNode( trackedCosts, processedNodes );
-
+	var node = getLowestCostNodePosition( priorityCosts );
 	while( node ) {
 		var costToReachNode = trackedCosts[node];
 
-		var childrenOfNode = {},
-			mapPosition = node.split(','),
-			currentX = parseInt(mapPosition[0],10),
-			currentY = parseInt(mapPosition[1],10);
-
-		if( currentX - 1 >= 0 ) childrenOfNode[(currentX-1)+','+currentY] = map[currentY][(currentX-1)];
-		if( currentX + 1 < width ) childrenOfNode[(currentX+1)+','+currentY] = map[currentY][(currentX+1)];
-		if( currentY - 1 >= 0 ) childrenOfNode[currentX+','+(currentY-1)] = map[(currentY-1)][currentX];
-		if( currentY + 1 < height ) childrenOfNode[currentX+','+(currentY+1)] = map[(currentY+1)][currentX];
-
+		var childrenOfNode = getNodeChildren( map, node, processedNodes, width, height );
 		for( var child in childrenOfNode ) {
-
 			var costFromNodeToChild = childrenOfNode[child],
 				costToChild = costToReachNode + costFromNodeToChild;
 
 			if( ! trackedCosts[child] || trackedCosts[child] > costToChild ) {
-				trackedCosts[child] = costToChild;
-				trackedParents[child] = node;
+				addNodeCost( priorityCosts, trackedCosts, child, costToChild );
 			}
 		}
 
 		processedNodes.push( node );
 
-		node = findLowestCostNode( trackedCosts, processedNodes );
-
+		node = getLowestCostNodePosition( priorityCosts );
 	}
-
-	var optimalPath = [ target ],
-		parent = trackedParents[target];
-
-	while( parent != start ) {
-		optimalPath.push(parent);
-		parent = trackedParents[parent];
-	}
-	optimalPath.reverse();
 
 	return trackedCosts[target];
 }
 
-function findLowestCostNode( costs, processed ) {
+function getNodeChildren( map, node, processedNodes, width, height ) {
+	var children = {},
+		mapPosition = node.split(','),
+		currentX = parseInt(mapPosition[0],10),
+		currentY = parseInt(mapPosition[1],10),
+		nodeString;
 
-	lowestCostNodes = Object.keys(costs);
-	lowestCostNodes = lowestCostNodes.filter(function(item){
-		return processed.indexOf(item) === -1;
-	});
-	lowestCostNodes.sort(function(a,b){return costs[a]-costs[b]});
+	nodeString = (currentX-1)+","+currentY;
+	if( currentX - 1 >= 0 && processedNodes.indexOf(nodeString) === -1 ) children[nodeString] = map[currentY][(currentX-1)];
 
-	return lowestCostNodes[0];
+	nodeString = (currentX+1)+","+currentY;
+	if( currentX + 1 < width && processedNodes.indexOf(nodeString) === -1 ) children[nodeString] = map[currentY][(currentX+1)];
+
+	nodeString = currentX+","+(currentY-1);
+	if( currentY - 1 >= 0 && processedNodes.indexOf(nodeString) === -1 ) children[nodeString] = map[(currentY-1)][currentX];
+
+	nodeString = currentX+","+(currentY+1);
+	if( currentY + 1 < height && processedNodes.indexOf(nodeString) === -1 ) children[nodeString] = map[(currentY+1)][currentX];
+
+	return children;
 }
 
+function addNodeCost( priorityCosts, trackedCosts, position, costString ) {
+
+	var cost = parseInt( costString, 10 );
+	if( costString === Infinity ) cost = Infinity;
+
+	trackedCosts[position] = cost;
+
+	for( var i = 0; i < priorityCosts.length; i++ ) {
+		if( priorityCosts[i].cost < cost ) continue;
+		break;
+	}
+
+	priorityCosts.splice( i, 0, {
+		cost: cost,
+		position: position
+	} );
+}
+
+function getLowestCostNodePosition( costs ) {
+	var node = costs.shift();
+	if( node ) return node.position;
+}
 
 
 
